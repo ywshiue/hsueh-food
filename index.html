@@ -223,6 +223,17 @@ svg{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-l
 .mdisc svg{stroke-width:1.6}
 .ro [data-a=add],.ro [data-a=addm],.ro [data-a=addtoday],.ro [data-a=editr],.ro [data-a=delr],.ro [data-a=newr],.ro [data-a=news],.ro [data-a=export],.ro #st{display:none!important}
 .ro .rb{cursor:default}.ro .rb:hover,.ro .row:hover{transform:none}
+.ps{display:flex;gap:8px;flex-wrap:wrap}
+.pt{position:relative;width:76px;height:76px;border-radius:16px;overflow:hidden;background:rgba(246,231,200,.06);box-shadow:inset 0 0 0 1px var(--rim);flex:none;animation:rise .3s var(--ease) both}
+.pt img{width:100%;height:100%;object-fit:cover}.pt b{position:absolute;left:5px;bottom:5px;font-weight:400;font-size:11px;padding:0 7px;border-radius:9px;background:var(--acc2);color:var(--ctext)}
+.pt .rmx{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(20,35,58,.85);display:grid;place-items:center;color:var(--ink)}.pt .rmx svg{width:10px;height:10px}
+.pt.add{display:grid;place-content:center;justify-items:center;gap:2px;color:var(--sub);cursor:pointer;box-shadow:inset 0 0 0 1.5px var(--rim)}.pt.add svg{width:22px;height:22px}.pt.add small{font:600 11px var(--font-latin)}
+.pt.add input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.hc{position:relative;margin:4px 0 12px}
+.hs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:22px;scrollbar-width:none}.hs::-webkit-scrollbar{display:none}
+.hs .hero{flex:0 0 100%;min-width:0;margin:0;border-radius:0;scroll-snap-align:start}
+.hd2{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px}
+.hd2 i{width:7px;height:7px;border-radius:50%;background:rgba(246,231,200,.5);transition:all .25s}.hd2 i.on{width:18px;border-radius:4px;background:var(--acc2)}
 /* 菜單 */
 .mdisc{width:46px;height:46px;border-radius:50%;background:var(--acc);color:var(--comp);display:grid;place-items:center;flex:none;box-shadow:0 0 0 4px rgba(232,85,58,.18)}
 .mdisc svg{width:24px;height:24px;stroke-width:1.6}
@@ -400,6 +411,10 @@ const dishesOf=m=>Array.isArray(m.items)?m.items:m.name?[{n:m.name,a:'',rid:m.ri
 const usesR=(m,id)=>dishesOf(m).some(d=>d.rid===id);
 const photosOf=m=>{const a=[...dishesOf(m).map(d=>d.ph).filter(Boolean),...(m.photo?[m.photo]:[])];return a.length?a:dishesOf(m).map(d=>d.rid&&S.items.get(d.rid)?.photo).filter(Boolean).slice(0,1)};
 const photoOf=m=>photosOf(m)[0]||'';
+const rPhotos=r=>Array.isArray(r.photos)&&r.photos.length?r.photos:(r.photo?[r.photo]:[]);
+const MAXP=5;
+function photoStrip(){const t=F.pics.map((p_,i)=>`<span class="pt"><img src="${esc(p_.url||src(p_.ref))}" alt="">${i===0?'<b>封面</b>':''}<button type="button" class="rmx" data-a="rmrp" data-i="${i}" aria-label="移除照片">${I.x}</button></span>`).join('');
+ return t+(F.pics.length<MAXP?`<label class="pt add">${I.cam}<small>${F.pics.length}/${MAXP}</small><input type="file" accept="image/*" multiple id="rpf" aria-label="加照片"></label>`:'');}
 const thumb=(p,a,id)=>p?`<button class="th" data-a="zoom" data-p="${esc(p)}" aria-label="看照片"><img src="${esc(src(p))}" alt="" loading="lazy"></button>`:`<div class="th">${I.pot}</div>`;
 let tt,pend=null;
 const flush=()=>{if(pend){const f_=pend;pend=null;f_()}};
@@ -631,7 +646,7 @@ function recList(){
 /* 浮層 */
 const ov=$('#ov');let F=null;
 const openOv=h=>{ov.innerHTML=`<div class="card" role="dialog" aria-modal="true">${h}</div>`;ov.classList.add('on');document.body.style.overflow='hidden'};
-const closeOv=()=>{D=null;ov.classList.remove('on');ov.innerHTML='';document.body.style.overflow='';if(F&&F.url)URL.revokeObjectURL(F.url);F=null};
+const closeOv=()=>{D=null;ov.classList.remove('on');ov.innerHTML='';document.body.style.overflow='';if(F&&F.url)URL.revokeObjectURL(F.url);if(F&&F.urls)F.urls.forEach(u=>URL.revokeObjectURL(u));F=null};
 const head=(t,back)=>`<div class="hd">${back?`<button class="xb" data-a="menu" data-t="${esc(back)}" aria-label="回菜單">${I.l}</button>`:''}<h2>${t}</h2><button class="xb" data-a="close" aria-label="關閉">${I.x}</button></div>`;
 
 function openRecipe(id,from){
@@ -639,7 +654,7 @@ function openRecipe(id,from){
  const n=all('m').filter(m=>usesR(m,id)).sort((a,b)=>a.date<b.date?1:-1);
  const ig=ingsOf(r),st=stepsOf(r),isS=r.kind==='s',sauces=all('s'),used=isS?all('r').filter(x=>ingsOf(x).some(i=>i.n===r.name)):[];
  const inm=x=>{const sc=!isS&&sauces.find(q=>q.name===x.n);return sc?`<button class="slink" data-a="openr" data-id="${esc(sc.id)}" data-from="r:${esc(id)}">${I.bottle}${esc(x.n)}</button>`:`<span>${esc(x.n)}</span>`};
- openOv(head(esc(r.name),from)+`<div class="bd">${r.photo?`<img class="hero" src="${esc(src(r.photo))}" alt="" data-a="zoom" data-p="${esc(r.photo)}">`:''}
+ openOv(head(esc(r.name),from)+`<div class="bd">${(()=>{const ps=rPhotos(r);return ps.length?`<div class="hc"><div class="hs" id="hs">${ps.map(p_=>`<img class="hero" src="${esc(src(p_))}" alt="" data-a="zoom" data-p="${esc(p_)}">`).join('')}</div>${ps.length>1?`<div class="hd2" id="hdots">${ps.map((_,i)=>`<i${i?'':' class="on"'}></i>`).join('')}</div>`:''}</div>`:''})()}
  <div class="meta">${isS?`<span class="tag">醬料</span>${r.keep?`<span>保存 ${esc(r.keep)}</span>`:''}`:''}${n.length?`<span>做過 ${n.length} 次 · 上次 ${esc(n[0].date.slice(5).replace('-','/'))}</span>`:''}${(r.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
  ${ig.length?`<div class="hrow"><div class="h3">食材</div><span class="prog">${ig.length} 樣</span></div><ul class="il">${ig.map(x=>`<li>${inm(x)}${x.m?`<span class="m">${esc(x.m)}</span>`:''}<span class="a">${esc(x.a)}</span></li>`).join('')}</ul>`:''}
  ${st.length?`<div class="hrow"><div class="h3">步驟</div><span class="prog" id="pg">點一下完成一步</span></div><ol class="tl" id="tl">${st.map((x,i)=>`<li data-a="step" data-i="${i}" role="button" tabindex="0"${i===0?' class="cur"':''}><span class="dt"></span><span class="tx">${esc(x)}</span></li>`).join('')}</ol>`:''}
@@ -681,10 +696,10 @@ function openMeal(id,pre){
  <div class="ft">${id?'<button class="btn danger" data-a="del">刪除</button>':''}<span class="sp"></span><button class="btn ghost" data-a="close">取消</button><button class="btn pri" data-a="save">存</button></div>`);
 }
 function openRecForm(id,pre,sauce){
- const r=id?S.items.get(id):{tags:pre?[pre]:[]},isS=sauce||r.kind==='s';F={kind:isS?'s':'r',id,photo:r.photo||'',file:null,url:'',del:0};
+ const r=id?S.items.get(id):{tags:pre?[pre]:[]},isS=sauce||r.kind==='s';F={kind:isS?'s':'r',id,photo:'',file:null,url:'',del:0,pics:rPhotos(r).map(ref=>({ref})),urls:[]};
  const ig=ingsOf(r),st=stepsOf(r),tg=new Set(r.tags||[]);
  const tagList=[...TAGS,...[...tg].filter(t=>!TAGS.includes(t))];
- openOv(head(isS?(id?'編輯醬料':'新醬料'):(id?'編輯食譜':'新食譜'))+`<form class="bd fm" id="fm"><div class="fr"><span id="pzw">${photoZone()}</span><div class="fm" style="flex:1;gap:10px;align-content:start">
+ openOv(head(isS?(id?'編輯醬料':'新醬料'):(id?'編輯食譜':'新食譜'))+`<form class="bd fm" id="fm"><div class="ps" id="psw">${photoStrip()}</div><div class="fr"><div class="fm" style="flex:1;gap:10px;align-content:start">
  <label class="fl">${isS?'醬料名':'菜名'}<input class="in" name="name" value="${esc(r.name||'')}" autocomplete="off"></label>${isS?`<label class="fl">保存<input class="in" name="keep" value="${esc(r.keep||'')}" placeholder="冷藏 7 天"></label>`:''}</div></div>
  ${isS?'':`<div class="sec">分類</div>
  <div class="sg" id="tgs">${tagList.map(t=>`<button type="button" class="seg${tg.has(t)?' on':''}" data-a="tg" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div>`}
@@ -717,9 +732,9 @@ const stamp=()=>{const d=new Date();return `${d.getFullYear()}${pad(d.getMonth()
 function loadZip(){return window.JSZip?Promise.resolve(window.JSZip):new Promise((res,rej)=>{const s_=document.createElement('script');s_.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';s_.onload=()=>res(window.JSZip);s_.onerror=rej;document.head.appendChild(s_)})}
 async function buildHtml(st){
  const rs=all('r'),ss=all('s'),pic={};
- const want=[...rs,...ss].map(r=>r.photo).filter(Boolean);let n=0;
+ const want=[...new Set([...rs,...ss].flatMap(r=>rPhotos(r).slice(0,3)))];let n=0;
  for(const p_ of want){st(`整理照片 ${++n}/${want.length}⋯`);try{pic[p_]=await b2d(await photoBlob(p_))}catch(e){}}
- const card=r=>{const ig=ingsOf(r),sp=stepsOf(r);return `<section class="rc">${r.photo&&pic[r.photo]?`<img src="${pic[r.photo]}" alt="">`:''}<div><h3>${esc(r.name)}</h3>${r.kind==='s'&&r.keep?`<p class="m">保存：${esc(r.keep)}</p>`:''}${r.kind==='r'?`<p class="m">${catOf(r).map(esc).join('、')}</p>`:''}
+ const card=r=>{const ig=ingsOf(r),sp=stepsOf(r);const ph=rPhotos(r).slice(0,3).filter(x=>pic[x]);return `<section class="rc">${ph.length?`<div class="pc">${ph.map(x=>`<img src="${pic[x]}" alt="">`).join('')}</div>`:''}<div><h3>${esc(r.name)}</h3>${r.kind==='s'&&r.keep?`<p class="m">保存：${esc(r.keep)}</p>`:''}${r.kind==='r'?`<p class="m">${catOf(r).map(esc).join('、')}</p>`:''}
  ${ig.length?`<table><tr><th>食材</th><th>份量</th><th>備註</th></tr>${ig.map(x=>`<tr><td>${esc(x.n)}</td><td>${esc(x.a)}</td><td>${esc(x.m)}</td></tr>`).join('')}</table>`:''}
  ${sp.length?`<ol>${sp.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>`:''}${r.note?`<p class="nt">${esc(r.note)}</p>`:''}</div></section>`};
  const groups=TAGS.map(t=>{const l=rs.filter(r=>catOf(r)[0]===t).sort((a,b)=>a.name.localeCompare(b.name,'zh-Hant'));return l.length?`<h2>${t} <small>${EN[t]}</small></h2>${l.map(card).join('')}`:''}).join('');
@@ -727,9 +742,9 @@ async function buildHtml(st){
  return `<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>薛大廚食譜 ${stamp()}</title><style>
 body{margin:0 auto;max-width:820px;padding:32px 20px;font:16px/1.7 "PingFang TC","Microsoft JhengHei",sans-serif;color:#1d2433}
 h1{font-size:30px;margin:0}.sub{color:#6b7384;margin:4px 0 24px}h2{font-size:22px;margin:36px 0 12px;padding-bottom:6px;border-bottom:2px solid #e8553a}h2 small{font-size:14px;color:#6b7384}
-.rc{display:flex;gap:18px;padding:16px 0;border-bottom:1px dashed #d5d9e0;break-inside:avoid}.rc img{width:150px;height:150px;object-fit:cover;border-radius:14px;flex:none}.rc>div{flex:1;min-width:0}
+.rc{display:flex;gap:18px;padding:16px 0;border-bottom:1px dashed #d5d9e0;break-inside:avoid}.pc{display:grid;gap:6px;flex:none;width:150px}.pc img{width:150px;height:150px;object-fit:cover;border-radius:14px}.pc img+img{height:72px}.rc>div{flex:1;min-width:0}
 h3{margin:0 0 2px;font-size:19px}.m{margin:0 0 8px;color:#6b7384;font-size:14px}table{border-collapse:collapse;width:100%;font-size:14.5px;margin:6px 0 10px}th,td{text-align:left;padding:5px 8px;border-bottom:1px solid #eceef2}th{color:#6b7384;font-weight:600}
-ol{margin:0;padding-left:22px}.nt{background:#f7f3ea;padding:8px 12px;border-radius:10px;font-size:14.5px}@media(max-width:560px){.rc{flex-direction:column}.rc img{width:100%;height:200px}}@media print{body{padding:0}}
+ol{margin:0;padding-left:22px}.nt{background:#f7f3ea;padding:8px 12px;border-radius:10px;font-size:14.5px}@media(max-width:560px){.rc{flex-direction:column}.pc{width:100%;grid-template-columns:repeat(3,1fr)}.pc img,.pc img+img{width:100%;height:110px}}@media print{body{padding:0}}
 </style></head><body><h1>薛大廚 Hsueh Food 食譜</h1><p class="sub">${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} 匯出 · ${rs.length} 道菜 · ${ss.length} 款醬料</p>${groups}${ss.length?`<h2>醬料 <small>Sauces</small></h2>${ss.map(card).join('')}`:''}</body></html>`;
 }
 function buildCsv(){
@@ -741,9 +756,9 @@ function buildCsv(){
 async function buildZip(st,site){
  st('載入壓縮工具⋯');const Z=await loadZip(),z=new Z(),map={};let n=0;
  const items=[...S.items].map(([id,v])=>({id,...v}));
- const refs=[...new Set(items.flatMap(v=>[v.photo,...(v.items||[]).map(d=>d.ph)]).filter(Boolean))];
+ const refs=[...new Set(items.flatMap(v=>[v.photo,...(v.photos||[]),...(v.items||[]).map(d=>d.ph)]).filter(Boolean))];
  for(const ref of refs){st(`打包照片 ${++n}/${refs.length}⋯`);try{const b=await photoBlob(ref),nm=`photos/${String(n).padStart(4,'0')}.jpg`;z.file(nm,b);map[ref]=nm}catch(e){}}
- const out=items.map(v=>({...v,photo:v.photo?map[v.photo]||'':v.photo,items:v.items?v.items.map(d=>({...d,ph:d.ph?map[d.ph]||'':''})):undefined}));
+ const out=items.map(v=>({...v,photo:v.photo?map[v.photo]||'':v.photo,photos:v.photos?v.photos.map(x=>map[x]||'').filter(Boolean):undefined,items:v.items?v.items.map(d=>({...d,ph:d.ph?map[d.ph]||'':''})):undefined}));
  z.file('data.json',JSON.stringify({app:'Hsueh Food',exportedAt:new Date().toISOString(),items:out},null,1));
  z.file('每日紀錄.csv',buildCsv());
  if(site){st('加入網頁檔⋯');let html='';for(const u of ['index.html',location.href.split('#')[0]]){try{const r=await fetch(u,{cache:'no-store'});if(r.ok){const t=await r.text();if(t.includes('Hsueh Food')&&t.includes('<!DOCTYPE')){html=t;break}}}catch(e){}}
@@ -780,7 +795,7 @@ async function storePhoto(file){
  if(S.assets){const b=await shrink(file,800,.72);const a=await S.assets.upload(b);return a.id}
  return toData(await shrink(file,560,.65));
 }
-const inUse=p=>[...S.items.values()].some(v=>v&&(v.photo===p||(v.items||[]).some(d=>d.ph===p)));
+const inUse=p=>[...S.items.values()].some(v=>v&&(v.photo===p||(v.photos||[]).includes(p)||(v.items||[]).some(d=>d.ph===p)));
 
 /* 儲存 */
 function persistLocal(){if(PREVIEW)return;try{localStorage.setItem('hsueh-food',JSON.stringify([...S.items]))}catch(e){toast('裝置空間不夠，照片可能沒存到')}}
@@ -807,10 +822,11 @@ async function save(btn){
  const drows=qa('#ed-dish .er').filter(r=>v(r,'.n')||r._file||r.dataset.ph);
  if(F.kind!=='m'&&!name){toast(F.kind==='s'?'醬料名還沒寫':'菜名還沒寫');return}
  if(F.kind==='m'&&!drows.length){toast('寫一樣菜或放張照片');return}
- btn.disabled=true;btn.textContent=(F.file||drows.some(r=>r._file))?'存照片中⋯':'存';
+ btn.disabled=true;btn.textContent=(F.file||drows.some(r=>r._file)||(F.pics||[]).some(p_=>p_.file))?'存照片中⋯':'存';
  try{
-  let photo=F.photo;const oldP=F.id&&S.items.get(F.id)?.photo;
+  let photo=F.photo;const oldP=F.id&&S.items.get(F.id)?.photo,oldRP=F.id&&F.kind!=='m'?rPhotos(S.items.get(F.id)):[];
   if(F.file)photo=await storePhoto(F.file);
+  let photos=[];if(F.pics){for(const p_ of F.pics)photos.push(p_.file?await storePhoto(p_.file):p_.ref);photo=photos[0]||''}
   const id=F.id||nid(F.kind);const prev=F.id?S.items.get(F.id):null;
   let obj;
   const rs=all('r');
@@ -818,10 +834,11 @@ async function save(btn){
   if(F.kind==='m'){const items=[];for(const r of drows){const ph=r._file?await storePhoto(r._file):(r.dataset.ph||'');const n=v(r,'.n');items.push({n,a:v(r,'.a'),rid:rs.find(x=>x.name===n)?.id||'',ph})}
    obj={kind:'m',items,date:g('date')||S.sel,slot:F.slot,note:g('note'),photo:'',t:prev?.t||Date.now()};S.sel=obj.date;S.view='log';
    if(prev&&S.assets){const keep=new Set(items.map(d=>d.ph));photosOf(prev).forEach(p_=>{if(!keep.has(p_))setTimeout(()=>{if(!inUse(p_))cleanPhoto({photo:p_})},500)})}}
-  else if(F.kind==='s'){obj={kind:'s',name,keep:g('keep'),ings:ingsC(),steps:stepsC(),note:g('note'),photo:photo||'',t:prev?.t||Date.now()}}
-  else{obj={kind:'r',name,tags:qa('#tgs .seg.on').map(b=>b.dataset.t),ings:qa('#ed-ing .er').map(r=>({n:v(r,'.n'),a:v(r,'.a'),m:v(r,'.nt')})).filter(x=>x.n),steps:qa('#ed-step textarea').map(t=>t.value.trim()).filter(Boolean),note:g('note'),photo:photo||'',t:prev?.t||Date.now()}}
+  else if(F.kind==='s'){obj={kind:'s',name,keep:g('keep'),ings:ingsC(),steps:stepsC(),note:g('note'),photo:photo||'',photos,t:prev?.t||Date.now()}}
+  else{obj={kind:'r',name,tags:qa('#tgs .seg.on').map(b=>b.dataset.t),ings:qa('#ed-ing .er').map(r=>({n:v(r,'.n'),a:v(r,'.a'),m:v(r,'.nt')})).filter(x=>x.n),steps:qa('#ed-step textarea').map(t=>t.value.trim()).filter(Boolean),note:g('note'),photo:photo||'',photos,t:prev?.t||Date.now()}}
   await put(id,obj);
-  if(oldP&&oldP!==photo&&S.assets&&!String(oldP).startsWith('data:')&&!inUse(oldP)){try{await S.assets.delete(oldP)}catch(e){}}
+  if(F.kind!=='m'){oldRP.filter(p_=>!photos.includes(p_)).forEach(p_=>{if(!inUse(p_))cleanPhoto({photo:p_})})}
+  else if(oldP&&oldP!==photo&&S.assets&&!String(oldP).startsWith('data:')&&!inUse(oldP)){try{await S.assets.delete(oldP)}catch(e){}}
   const kd=F.kind,back=kd==='r'?catOf(obj)[0]:'';closeOv();render();toast('已存好');if(back)openMenu(back);else if(kd==='s')openRecipe(id,'__sauces');
  }catch(e){btn.disabled=false;btn.textContent='存';toast(e&&e.code==='quota_exceeded'?'空間滿了，刪一些舊紀錄再試':e&&e.code==='invalid_argument'?'你目前只能看，不能新增，請擁有者把你設為可編輯':'沒存成功，再按一次試試')}
 }
@@ -858,6 +875,7 @@ document.addEventListener('click',async e=>{
   case 'exp':doExport(el.dataset.k,el);break;
   case 'news':openRecForm(null,undefined,true);break;
   case 'more':{const p_=$('#pop');p_.hidden?(p_.hidden=false,el.setAttribute('aria-expanded','true')):hidePop();break}
+  case 'rmrp':{e.preventDefault();F.pics.splice(Number(el.dataset.i),1);$('#psw').innerHTML=photoStrip();break}
   case 'rmdp':{e.preventDefault();const row=el.closest('.er');row._file=null;row.dataset.ph='';el.parentNode.outerHTML=dishPh('');break}
   case 'as':S.as=el.dataset.k;openAll();break;
   case 'fr':S.fr=el.dataset.k;render();break;
@@ -879,6 +897,7 @@ document.addEventListener('click',async e=>{
  }
 });
 {const mq=matchMedia('(max-width:600px)');mq.addEventListener&&mq.addEventListener('change',()=>{S.intro=1;if(S.view==='rec')render()})}
+document.addEventListener('scroll',e=>{const h=e.target;if(h&&h.id==='hs'){const i=Math.round(h.scrollLeft/h.clientWidth);document.querySelectorAll('#hdots i').forEach((d,j)=>d.classList.toggle('on',j===i))}},true);
 $('#lb').addEventListener('click',()=>$('#lb').classList.remove('on'));
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape')hidePop();
@@ -893,6 +912,7 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('compositionend',e=>{if(e.target.id==='sq')renderSearch(e.target.value);if(e.target.id==='qi'){S.q=e.target.value;$('#rg').innerHTML=recList()}});
 document.addEventListener('change',e=>{
+ if(e.target.id==='rpf'&&e.target.files.length){for(const f_ of [...e.target.files]){if(F.pics.length>=MAXP){toast(`最多 ${MAXP} 張`);break}if(f_.type&&!/^image\//.test(f_.type))continue;const u=URL.createObjectURL(f_);F.urls.push(u);F.pics.push({file:f_,url:u})}$('#psw').innerHTML=photoStrip();return}
  if(e.target.classList.contains('dpf')&&e.target.files[0]){const f_=e.target.files[0],row=e.target.closest('.er');if(f_.type&&!/^image\//.test(f_.type)){toast('只能放照片');return}row._file=f_;const u=URL.createObjectURL(f_);F.urls&&F.urls.push(u);const lb=e.target.parentNode;lb.outerHTML=dishPh(u);return}
  if(e.target.id==='dp'&&e.target.value){S.sel=e.target.value;render()}
  if(e.target.id==='pf'&&e.target.files[0]){const f=e.target.files[0];if(!/^image\//.test(f.type)&&f.type){toast('只能放照片');return}if(F.url)URL.revokeObjectURL(F.url);F.file=f;F.url=URL.createObjectURL(f);$('#pzw').innerHTML=photoZone()}
