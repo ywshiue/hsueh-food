@@ -363,17 +363,20 @@ textarea.in{height:auto;min-height:92px;padding:10px 14px;line-height:1.7;resize
  <header class="top">
   <div class="brand"><b>Hsueh Food</b><small>薛大廚</small></div>
   <span class="sp"></span>
-  <div class="pm"><button class="hb2" data-a="more" aria-label="更多" aria-expanded="false"><svg viewBox="-8 -8 16 16"><circle cx="-4.5" r="1.1" fill="currentColor" stroke="none"/><circle r="1.1" fill="currentColor" stroke="none"/><circle cx="4.5" r="1.1" fill="currentColor" stroke="none"/></svg></button>
-   <div class="pop" id="pop" hidden>
-    <button data-a="search"><svg viewBox="-8 -8 16 16"><circle cx="-1" cy="-1" r="4.5"/><path d="M2.5 2.5 6 6"/></svg>搜尋<small>Search</small></button>
-    <button data-a="allr"><svg viewBox="-8 -8 16 16"><path d="M-5-4.5h10M-5 0h10M-5 4.5h6.5"/></svg>食譜<small>Recipes</small></button>
-    <button data-a="export"><svg viewBox="-8 -8 16 16"><path d="M0-6.5v8M-3.5-2 0 1.5 3.5-2M-6 3.5V6h12V3.5"/></svg>匯出<small>Export</small></button>
-    <button data-a="login" class="gh-in"><svg viewBox="-8 -8 16 16"><rect x="-5" y="-1" width="10" height="7.5" rx="2"/><path d="M-3-1v-2.5a3 3 0 0 1 6 0V-1"/></svg>擁有者登入<small>Owner</small></button>
-    <button data-a="logout" class="gh-out"><svg viewBox="-8 -8 16 16"><path d="M1-6H5a1 1 0 0 1 1 1V5a1 1 0 0 1-1 1H1M-2-3l-3.5 3L-2 3M-5.5 0H3"/></svg>登出<small>Log out</small></button>
-    <button data-a="sauces"><svg viewBox="-8 -8 16 16"><path d="M-1.8-7h3.6v2.6L4-2.2V5.5A1.5 1.5 0 0 1 2.5 7h-5A1.5 1.5 0 0 1-4 5.5V-2.2l2.2-2.2zM-4 0.5h8"/></svg>醬料<small>Sauces</small></button>
-   </div></div>
-  <div class="vtog" role="tablist"><button data-a="view" data-v="rec" class="on">食譜</button><button data-a="view" data-v="log">每日</button></div>
   <button class="hb" data-a="add" aria-label="新增"><svg viewBox="-8 -8 16 16"><path d="M-5 0H5M0-5V5"/></svg></button>
+  <div class="vtog" role="tablist"><button data-a="view" data-v="rec" class="on">食堂</button><button data-a="view" data-v="log">每日</button></div>
+  <div class="pm"><button class="hb2" data-a="more" data-p="pop1" aria-label="食譜、醬料、搜尋" aria-expanded="false"><svg viewBox="-8 -8 16 16"><path d="M0-4.5C-1.8-6-4.3-6.3-6.5-5.8v10.5C-4.3 4.2-1.8 4.5 0 6c1.8-1.5 4.3-1.8 6.5-1.3V-5.8C4.3-6.3 1.8-6 0-4.5zM0-4.5V6"/></svg></button>
+   <div class="pop" id="pop1" hidden>
+    <button data-a="allr"><svg viewBox="-8 -8 16 16"><path d="M-5-4.5h10M-5 0h10M-5 4.5h6.5"/></svg>食譜<small>Recipes</small></button>
+    <button data-a="sauces"><svg viewBox="-8 -8 16 16"><path d="M-1.8-7h3.6v2.6L4-2.2V5.5A1.5 1.5 0 0 1 2.5 7h-5A1.5 1.5 0 0 1-4 5.5V-2.2l2.2-2.2zM-4 0.5h8"/></svg>醬料<small>Sauces</small></button>
+    <button data-a="search"><svg viewBox="-8 -8 16 16"><circle cx="-1" cy="-1" r="4.5"/><path d="M2.5 2.5 6 6"/></svg>搜尋<small>Search</small></button>
+   </div></div>
+  <div class="pm"><button class="hb2" data-a="more" data-p="pop2" aria-label="更多" aria-expanded="false"><svg viewBox="-8 -8 16 16"><circle cx="-4.5" r="1.1" fill="currentColor" stroke="none"/><circle r="1.1" fill="currentColor" stroke="none"/><circle cx="4.5" r="1.1" fill="currentColor" stroke="none"/></svg></button>
+   <div class="pop" id="pop2" hidden>
+    <button data-a="login" class="gh-in"><svg viewBox="-8 -8 16 16"><rect x="-5" y="-1" width="10" height="7.5" rx="2"/><path d="M-3-1v-2.5a3 3 0 0 1 6 0V-1"/></svg>登入<small>Log in</small></button>
+    <button data-a="export"><svg viewBox="-8 -8 16 16"><path d="M0-6.5v8M-3.5-2 0 1.5 3.5-2M-6 3.5V6h12V3.5"/></svg>匯出<small>Export</small></button>
+    <button data-a="logout" class="gh-out"><svg viewBox="-8 -8 16 16"><path d="M1-6H5a1 1 0 0 1 1 1V5a1 1 0 0 1-1 1H1M-2-3l-3.5 3L-2 3M-5.5 0H3"/></svg>登出<small>Log out</small></button>
+   </div></div>
  </header>
  <main id="main"></main>
  <div id="st"></div>
@@ -820,7 +823,7 @@ let pushing=null,again=false;
 function schedulePush(){
  if(pushing){again=true;return pushing}
  setSync('busy');
- pushing=(async()=>{try{do{again=false;await pushNow()}while(again);setSync('ok')}catch(e){setSync('err',e.status===401?'登入過期，請重新登入':e.status===403||e.status===404?'權杖沒有寫入權限':e.status===409?'GitHub 正在忙，請重試':'網路不穩，請重試')}finally{pushing=null}})();
+ pushing=(async()=>{try{do{again=false;await pushNow()}while(again);setSync('ok')}catch(e){setSync('err',e.status===401?'登入過期，請重新登入':e.status===403||e.status===404?'沒有寫入權限，請重新登入':e.status===409?'GitHub 正在忙，請重試':'網路不穩，請重試')}finally{pushing=null}})();
  return pushing;
 }
 async function ownerLogin(tok,silent){
@@ -834,14 +837,8 @@ async function ownerLogin(tok,silent){
  }catch(e){S.tok='';if(!silent)throw e;return false}
 }
 function openLogin(){
- openOv(`<div class="hd"><h2>擁有者登入<small>只有擁有者能新增、修改</small></h2><button class="xb" data-a="close" aria-label="關閉">${I.x}</button></div>
- <div class="bd"><ol class="howto">
- <li>打開 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub 產生權杖頁</a></li>
- <li>Repository access 選「Only select repositories」，只勾 <b>${esc(GH.repo)}</b></li>
- <li>Permissions → Repository permissions → <b>Contents</b> 選「Read and write」</li>
- <li>按 Generate token，複製那串權杖貼到下面</li></ol>
- <label class="fl">權杖<input class="in" id="tokin" type="password" autocomplete="off" placeholder="github_pat_⋯"></label>
- <p class="note" style="font-size:13px;margin:10px 2px 0">權杖只存在這台裝置的瀏覽器，不會放上網站。不用時可以在 GitHub 刪掉它。</p></div>
+ openOv(`<div class="hd"><h2>登入</h2><button class="xb" data-a="close" aria-label="關閉">${I.x}</button></div>
+ <div class="bd"><label class="fl">金鑰<input class="in" id="tokin" type="password" autocomplete="current-password" placeholder="貼上金鑰"></label></div>
  <div class="ft"><span class="sp"></span><button class="btn pri" data-a="dologin">登入</button></div>`);
  setTimeout(()=>$('#tokin')&&$('#tokin').focus(),50);
 }
@@ -919,10 +916,10 @@ async function save(btn){
 }
 
 /* 事件 */
-const hidePop=()=>{const p_=$('#pop');if(p_&&!p_.hidden){p_.hidden=true;document.querySelector('[data-a=more]').setAttribute('aria-expanded','false')}};
+const hidePop=(keep)=>{document.querySelectorAll('.pop').forEach(p_=>{if(p_.id!==keep&&!p_.hidden){p_.hidden=true;const b_=document.querySelector(`[data-p=${p_.id}]`);b_&&b_.setAttribute('aria-expanded','false')}})};
 const RO_BLOCK=new Set(['add','addm','addtoday','editm','editr','delr','del','newr','news','export','exp','save']);
 document.addEventListener('click',async e=>{
- if(!e.target.closest('.pm'))hidePop();
+ {const pm=e.target.closest('.pm');hidePop(pm?pm.querySelector('.pop').id:undefined)}
  const el=e.target.closest('[data-a]');
  if(e.target===ov){closeOv();return}
  if(!el)return;const a=el.dataset.a,id=el.dataset.id;
@@ -949,11 +946,11 @@ document.addEventListener('click',async e=>{
   case 'export':hidePop();openExport();break;
   case 'login':hidePop();openLogin();break;
   case 'logout':hidePop();try{localStorage.removeItem(TOKKEY)}catch(_){}S.tok='';S.gh=false;S.ro=true;document.documentElement.classList.remove('owner');document.documentElement.classList.add('ro');render();toast('已登出');break;
-  case 'dologin':{const tk=($('#tokin')?.value||'').trim();if(!tk){toast('先貼上權杖');break}el.disabled=true;el.textContent='確認中⋯';try{await ownerLogin(tk);closeOv();toast('已登入，可以開始記錄')}catch(err){el.disabled=false;el.textContent='登入';toast(err.status===401?'權杖不對或已過期':err.status===403||err.status===404?'這組權杖沒有 '+GH.repo+' 的寫入權限':'連不上 GitHub，稍後再試')}break}
+  case 'dologin':{const tk=($('#tokin')?.value||'').trim();if(!tk){toast('先貼上金鑰');break}el.disabled=true;el.textContent='確認中⋯';try{await ownerLogin(tk);closeOv();toast('已登入，可以開始記錄')}catch(err){el.disabled=false;el.textContent='登入';toast(err.status===401||err.status===403||err.status===404?'金鑰不對或已過期':'連不上，稍後再試')}break}
   case 'ghretry':schedulePush();break;
   case 'exp':doExport(el.dataset.k,el);break;
   case 'news':openRecForm(null,undefined,true);break;
-  case 'more':{const p_=$('#pop');p_.hidden?(p_.hidden=false,el.setAttribute('aria-expanded','true')):hidePop();break}
+  case 'more':{const p_=document.getElementById(el.dataset.p);hidePop(el.dataset.p);if(p_.hidden){p_.hidden=false;el.setAttribute('aria-expanded','true')}else hidePop();break}
   case 'rmrp':{e.preventDefault();F.pics.splice(Number(el.dataset.i),1);$('#psw').innerHTML=photoStrip();break}
   case 'rmdp':{e.preventDefault();const row=el.closest('.er');row._file=null;row.dataset.ph='';el.parentNode.outerHTML=dishPh('');break}
   case 'as':S.as=el.dataset.k;openAll();break;
@@ -979,6 +976,7 @@ document.addEventListener('click',async e=>{
 document.addEventListener('scroll',e=>{const h=e.target;if(h&&h.id==='hs'){const i=Math.round(h.scrollLeft/h.clientWidth);document.querySelectorAll('#hdots i').forEach((d,j)=>d.classList.toggle('on',j===i))}},true);
 $('#lb').addEventListener('click',()=>$('#lb').classList.remove('on'));
 document.addEventListener('keydown',e=>{
+ if(e.key==='Enter'&&e.target.id==='tokin'){e.preventDefault();document.querySelector('[data-a=dologin]')?.click();return}
  if(e.key==='Escape')hidePop();
  if(e.key==='Enter'&&!e.isComposing){const t=e.target,row=t.closest&&t.closest('.er,.se');
   if(row&&!(t.tagName==='TEXTAREA'&&e.shiftKey)){e.preventDefault();addRow(row.parentNode.id.slice(3),row);return}
