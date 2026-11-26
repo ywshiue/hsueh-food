@@ -234,6 +234,13 @@ svg{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-l
 .hs .hero{flex:0 0 100%;min-width:0;margin:0;border-radius:0;scroll-snap-align:start}
 .hd2{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px}
 .hd2 i{width:7px;height:7px;border-radius:50%;background:rgba(246,231,200,.5);transition:all .25s}.hd2 i.on{width:18px;border-radius:4px;background:var(--acc2)}
+.gh-in,.gh-out{display:none!important}
+.ghsite.ro .gh-in,.ghsite.owner .gh-out{display:flex!important}
+.ghsite [data-k=site]{display:none}
+.howto{margin:0 0 14px;padding-left:22px;display:grid;gap:8px;font-size:14.5px;line-height:1.6}.howto a{color:var(--acc2)}.howto b{color:var(--acc2);font-weight:400}
+.status.err{color:#f3b0a3}
+#st{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:12}
+#st .status{margin:0;padding:8px 14px;border-radius:var(--radius-pill);background:var(--panel);box-shadow:inset 0 0 0 1px var(--rim),var(--shadow-float)}
 /* 菜單 */
 .mdisc{width:46px;height:46px;border-radius:50%;background:var(--acc);color:var(--comp);display:grid;place-items:center;flex:none;box-shadow:0 0 0 4px rgba(232,85,58,.18)}
 .mdisc svg{width:24px;height:24px;stroke-width:1.6}
@@ -361,6 +368,8 @@ textarea.in{height:auto;min-height:92px;padding:10px 14px;line-height:1.7;resize
     <button data-a="search"><svg viewBox="-8 -8 16 16"><circle cx="-1" cy="-1" r="4.5"/><path d="M2.5 2.5 6 6"/></svg>搜尋<small>Search</small></button>
     <button data-a="allr"><svg viewBox="-8 -8 16 16"><path d="M-5-4.5h10M-5 0h10M-5 4.5h6.5"/></svg>食譜<small>Recipes</small></button>
     <button data-a="export"><svg viewBox="-8 -8 16 16"><path d="M0-6.5v8M-3.5-2 0 1.5 3.5-2M-6 3.5V6h12V3.5"/></svg>匯出<small>Export</small></button>
+    <button data-a="login" class="gh-in"><svg viewBox="-8 -8 16 16"><rect x="-5" y="-1" width="10" height="7.5" rx="2"/><path d="M-3-1v-2.5a3 3 0 0 1 6 0V-1"/></svg>擁有者登入<small>Owner</small></button>
+    <button data-a="logout" class="gh-out"><svg viewBox="-8 -8 16 16"><path d="M1-6H5a1 1 0 0 1 1 1V5a1 1 0 0 1-1 1H1M-2-3l-3.5 3L-2 3M-5.5 0H3"/></svg>登出<small>Log out</small></button>
     <button data-a="sauces"><svg viewBox="-8 -8 16 16"><path d="M-1.8-7h3.6v2.6L4-2.2V5.5A1.5 1.5 0 0 1 2.5 7h-5A1.5 1.5 0 0 1-4 5.5V-2.2l2.2-2.2zM-4 0.5h8"/></svg>醬料<small>Sauces</small></button>
    </div></div>
   <div class="vtog" role="tablist"><button data-a="view" data-v="rec" class="on">食譜</button><button data-a="view" data-v="log">每日</button></div>
@@ -402,7 +411,7 @@ try{const h=location.hash.slice(1);if(h==='log')S.view='log'}catch(e){}
 {let h='';for(let i=0;i<70;i++){const s=Math.random()<.15?3:2;h+=`<i style="left:${(Math.random()*100).toFixed(2)}%;top:${(Math.random()*100).toFixed(2)}%;width:${s}px;height:${s}px;opacity:${(.2+Math.random()*.5).toFixed(2)}"></i>`}$('#sky').innerHTML=h}
 
 const all=k=>[...S.items].filter(([,v])=>v&&v.kind===k).map(([id,v])=>({id,...v}));
-const src=p=>!p?'':/^(data:image\/|photos\/)/.test(String(p))?p:'/_blob/'+encodeURIComponent(p);
+const src=p=>!p?'':(S.local&&S.local[p])?S.local[p]:/^(data:image\/|photos\/)/.test(String(p))?p:'/_blob/'+encodeURIComponent(p);
 const TAGS=['肉類','海鮮','湯品','飯食','麵食','蔬食','甜點','小點','其他'];
 const lns=s=>String(s||'').split('\n').map(x=>x.trim()).filter(Boolean);
 const ingsOf=r=>Array.isArray(r.ings)?r.ings:lns(r.ing).map(n=>({n,a:'',m:''}));
@@ -429,6 +438,7 @@ function render(){
  const oc=$('.city'),sx=oc?oc.scrollLeft:null;
  $('#main').innerHTML=S.view==='log'?logView():recView();
  const nc=$('.city');if(nc&&nc.scrollWidth>nc.clientWidth)nc.scrollLeft=sx!=null&&sx>0?sx:(nc.scrollWidth-nc.clientWidth)/2;
+ if(S.gh&&S.sync&&S.sync.st){setTimeout(()=>setSync(S.sync.st,S.sync.msg));}
  $('#st').innerHTML=!S.ready?'<div class="status"><span class="spin"></span>載入中⋯</div>':S.note?`<div class="status">${esc(S.note)}</div>`:'';
 }
 function autoTod(){const h=new Date().getHours();return h>=6&&h<16?'day':h>=16&&h<19?'dusk':'night'}
@@ -723,7 +733,7 @@ function openExport(){
  ${opt('site',I.box,'網站版',`放到 Netlify 給別人看，只能看不能改 · .zip`)}
  ${opt('zip',I.box,'完整資料',`全部資料加原始照片，之後可以搬家用 · .zip`)}
  </div><div class="status" id="exs"></div></div>`);
- if(!S.dl)$('#exs').textContent='這個畫面不能下載檔案，請用電腦或手機瀏覽器打開網頁再試';
+ if(!S.dl&&!S.site)$('#exs').textContent='這個畫面不能下載檔案，請用電腦或手機瀏覽器打開網頁再試';
 }
 const d2b=u=>{const [h,b]=u.split(','),bin=/;base64/.test(h)?atob(b):decodeURIComponent(b),a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i)&255;return new Blob([a],{type:(h.match(/data:([^;,]+)/)||[])[1]||'image/jpeg'})};
 async function photoBlob(ref){if(String(ref).startsWith('data:'))return d2b(ref);if(String(ref).startsWith('photos/')){const r=await fetch(ref);if(!r.ok)throw new Error('photo');return r.blob()}const r=await fetch('/_blob/'+encodeURIComponent(ref));if(!r.ok)throw new Error('photo');return r.blob()}
@@ -767,7 +777,7 @@ async function buildZip(st,site){
  st('壓縮中⋯');return z.generateAsync({type:'blob'});
 }
 async function doExport(k,btn){
- if(!S.dl){toast('這個畫面不能下載檔案');return}
+ if(!S.dl&&!S.site){toast('這個畫面不能下載檔案');return}
  const st=t=>{const e=$('#exs');if(e)e.textContent=t};
  document.querySelectorAll('[data-a=exp]').forEach(b=>b.disabled=true);
  try{
@@ -777,9 +787,67 @@ async function doExport(k,btn){
   else if(k==='site'){data=await buildZip(st,true);fn=`薛大廚網站版_${stamp()}.zip`}
   else{data=await buildZip(st);fn=`薛大廚完整資料_${stamp()}.zip`}
   st('請在跳出的視窗確認下載');
-  await S.dl.save({filename:fn,data});st('');toast('已匯出');
+  await saveFile(fn,data);st('');toast('已匯出');
  }catch(e){const c=e&&e.code;st(c==='nosrc'?'網頁檔抓不到，請跟 Claude 說':c==='declined'?'':c==='host_unavailable'?'這個 App 不能存檔，請用瀏覽器打開網頁再匯出':c==='rate_limited'?'稍等一下再試':'匯出沒成功，再試一次')}
  finally{document.querySelectorAll('[data-a=exp]').forEach(b=>b.disabled=false)}
+}
+/* GitHub 擁有者模式 */
+const GH=(()=>{const h=location.hostname,seg=location.pathname.split('/').filter(Boolean);return h.endsWith('.github.io')&&seg[0]&&!seg[0].includes('.')?{owner:h.split('.')[0],repo:seg[0],branch:'main'}:{owner:'ywshiue',repo:'hsueh-food',branch:'main'}})();
+S.pend={};S.delp=new Set();S.local={};
+const TOKKEY='hsueh-food-gh-token';
+const getTok=()=>{try{return localStorage.getItem(TOKKEY)||''}catch(e){return ''}};
+async function gh(path,opt={}){
+ const r=await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}${path}`,{method:opt.method||'GET',cache:'no-store',headers:{Authorization:'Bearer '+S.tok,Accept:opt.raw?'application/vnd.github.raw+json':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},body:opt.body?JSON.stringify(opt.body):undefined});
+ if(!r.ok){const e=new Error('github '+r.status);e.status=r.status;throw e}
+ return opt.raw?r.text():r.status===204?null:r.json();
+}
+function setSync(st,msg){S.sync={st,msg};if(!S.ready)return;const e=$('#st');if(!e)return;
+ e.innerHTML=st==='busy'?'<div class="status"><span class="spin"></span>上傳到 GitHub⋯</div>':st==='err'?`<div class="status err">還沒上傳成功：${esc(msg||'')} <button class="btn sm" data-a="ghretry">重試</button></div>`:st==='ok'?'<div class="status">已上傳，大約 1 分鐘後大家看得到</div>':'';
+ if(st==='ok'){clearTimeout(S.syncT);S.syncT=setTimeout(()=>{if(S.sync.st==='ok')setSync('')},6000)}}
+async function pushNow(){
+ const pend={...S.pend},delp=[...S.delp];
+ const ref=await gh(`/git/ref/heads/${GH.branch}`),head=ref.object.sha,c=await gh(`/git/commits/${head}`),tree=[];
+ for(const [path,b64] of Object.entries(pend)){const bl=await gh('/git/blobs',{method:'POST',body:{content:b64,encoding:'base64'}});tree.push({path,mode:'100644',type:'blob',sha:bl.sha})}
+ for(const path of delp)tree.push({path,mode:'100644',type:'blob',sha:null});
+ const data=JSON.stringify({app:'Hsueh Food',updatedAt:new Date().toISOString(),items:[...S.items].map(([id,v])=>({id,...v}))},null,1);
+ tree.push({path:'data.json',mode:'100644',type:'blob',content:data});
+ let t;try{t=await gh('/git/trees',{method:'POST',body:{base_tree:c.tree.sha,tree}})}catch(e){if(e.status===422&&delp.length){delp.forEach(p_=>S.delp.delete(p_));return pushNow()}throw e}
+ const nc=await gh('/git/commits',{method:'POST',body:{message:'更新薛大廚資料',tree:t.sha,parents:[head]}});
+ await gh(`/git/refs/heads/${GH.branch}`,{method:'PATCH',body:{sha:nc.sha}});
+ Object.keys(pend).forEach(k=>delete S.pend[k]);delp.forEach(p_=>S.delp.delete(p_));
+}
+let pushing=null,again=false;
+function schedulePush(){
+ if(pushing){again=true;return pushing}
+ setSync('busy');
+ pushing=(async()=>{try{do{again=false;await pushNow()}while(again);setSync('ok')}catch(e){setSync('err',e.status===401?'登入過期，請重新登入':e.status===403||e.status===404?'權杖沒有寫入權限':e.status===409?'GitHub 正在忙，請重試':'網路不穩，請重試')}finally{pushing=null}})();
+ return pushing;
+}
+async function ownerLogin(tok,silent){
+ S.tok=tok;
+ try{const r=await gh('');if(!r.permissions||!r.permissions.push){const e=new Error();e.status=403;throw e}
+  const txt=await gh(`/contents/data.json?ref=${GH.branch}`,{raw:true});const j=JSON.parse(txt);
+  S.items=new Map((j.items||[]).map(({id,...v})=>[id,v]));S.gh=true;S.ro=false;
+  document.documentElement.classList.remove('ro');document.documentElement.classList.add('owner');
+  try{localStorage.setItem(TOKKEY,tok)}catch(e){}
+  render();return true;
+ }catch(e){S.tok='';if(!silent)throw e;return false}
+}
+function openLogin(){
+ openOv(`<div class="hd"><h2>擁有者登入<small>只有擁有者能新增、修改</small></h2><button class="xb" data-a="close" aria-label="關閉">${I.x}</button></div>
+ <div class="bd"><ol class="howto">
+ <li>打開 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub 產生權杖頁</a></li>
+ <li>Repository access 選「Only select repositories」，只勾 <b>${esc(GH.repo)}</b></li>
+ <li>Permissions → Repository permissions → <b>Contents</b> 選「Read and write」</li>
+ <li>按 Generate token，複製那串權杖貼到下面</li></ol>
+ <label class="fl">權杖<input class="in" id="tokin" type="password" autocomplete="off" placeholder="github_pat_⋯"></label>
+ <p class="note" style="font-size:13px;margin:10px 2px 0">權杖只存在這台裝置的瀏覽器，不會放上網站。不用時可以在 GitHub 刪掉它。</p></div>
+ <div class="ft"><span class="sp"></span><button class="btn pri" data-a="dologin">登入</button></div>`);
+ setTimeout(()=>$('#tokin')&&$('#tokin').focus(),50);
+}
+async function saveFile(fn,data){
+ if(S.dl)return S.dl.save({filename:fn,data});
+ const u=URL.createObjectURL(data instanceof Blob?data:new Blob([data]));const a=document.createElement('a');a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
 }
 /* 照片 */
 async function shrink(file,max,q){
@@ -792,6 +860,7 @@ async function shrink(file,max,q){
 }
 const toData=b=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)});
 async function storePhoto(file){
+ if(S.gh){const b=await shrink(file,800,.72),path='photos/'+nid('p')+'.jpg';S.pend[path]=(await toData(b)).split(',')[1];S.local[path]=URL.createObjectURL(b);return path}
  if(S.assets){const b=await shrink(file,800,.72);const a=await S.assets.upload(b);return a.id}
  return toData(await shrink(file,560,.65));
 }
@@ -800,14 +869,20 @@ const inUse=p=>[...S.items.values()].some(v=>v&&(v.photo===p||(v.photos||[]).inc
 /* 儲存 */
 function persistLocal(){if(PREVIEW)return;try{localStorage.setItem('hsueh-food',JSON.stringify([...S.items]))}catch(e){toast('裝置空間不夠，照片可能沒存到')}}
 async function put(id,obj){
+ if(S.gh){S.items.set(id,obj);render();schedulePush();return}
  if(S.col){await S.col.doc(id).set(obj)}else{S.items.set(id,obj);persistLocal();render()}
 }
 async function drop(id,keep){
  const old=S.items.get(id);
- if(S.col)await S.col.doc(id).delete();else{S.items.delete(id);persistLocal();render()}
+ if(S.gh){S.items.delete(id);render();schedulePush()}
+ else if(S.col)await S.col.doc(id).delete();else{S.items.delete(id);persistLocal();render()}
  if(!keep)cleanPhoto(old);
 }
-function cleanPhoto(old){if(old&&old.photo&&S.assets&&!String(old.photo).startsWith('data:')&&!inUse(old.photo))S.assets.delete(old.photo).catch(()=>{})}
+function cleanPhoto(old){if(!old)return;const refs=[...new Set([old.photo,...(old.photos||[]),...(old.items||[]).map(d=>d.ph)].filter(Boolean))];let ch=false;
+ for(const p_ of refs){if(inUse(p_))continue;
+  if(S.gh){if(String(p_).startsWith('photos/')){if(S.pend[p_])delete S.pend[p_];else S.delp.add(p_);ch=true}}
+  else if(S.assets&&!String(p_).startsWith('data:'))S.assets.delete(p_).catch(()=>{})}
+ if(ch)schedulePush()}
 async function removeUndo(id){
  const old=S.items.get(id);if(!old)return;
  const nm=old.kind!=='m'?old.name:dishesOf(old).map(x=>x.n).join('、')||'這一餐';
@@ -872,6 +947,10 @@ document.addEventListener('click',async e=>{
   case 'allr':hidePop();openAll();break;
   case 'sauces':hidePop();openSauces();break;
   case 'export':hidePop();openExport();break;
+  case 'login':hidePop();openLogin();break;
+  case 'logout':hidePop();try{localStorage.removeItem(TOKKEY)}catch(_){}S.tok='';S.gh=false;S.ro=true;document.documentElement.classList.remove('owner');document.documentElement.classList.add('ro');render();toast('已登出');break;
+  case 'dologin':{const tk=($('#tokin')?.value||'').trim();if(!tk){toast('先貼上權杖');break}el.disabled=true;el.textContent='確認中⋯';try{await ownerLogin(tk);closeOv();toast('已登入，可以開始記錄')}catch(err){el.disabled=false;el.textContent='登入';toast(err.status===401?'權杖不對或已過期':err.status===403||err.status===404?'這組權杖沒有 '+GH.repo+' 的寫入權限':'連不上 GitHub，稍後再試')}break}
+  case 'ghretry':schedulePush();break;
   case 'exp':doExport(el.dataset.k,el);break;
   case 'news':openRecForm(null,undefined,true);break;
   case 'more':{const p_=$('#pop');p_.hidden?(p_.hidden=false,el.setAttribute('aria-expanded','true')):hidePop();break}
@@ -950,7 +1029,7 @@ else{render();
  const use=n=>window.claude&&window.claude.use?window.claude.use(n).catch(()=>null):Promise.resolve(null);
  const [db,user,assets,dl]=await Promise.all([use('db'),use('user'),use('assets'),use('downloads')]);S.dl=dl||null;
  S.assets=assets||null;
- if(!db){try{const r_=await fetch('data.json',{cache:'no-store'});if(r_.ok){const j=await r_.json();S.items=new Map((j.items||[]).map(({id,...v})=>[id,v]));S.ro=true;document.documentElement.classList.add('ro');S.ready=true;S.note='';render();return}}catch(e){}
+ if(!db){try{const r_=await fetch('data.json?v='+Date.now(),{cache:'no-store'});if(r_.ok){const j=await r_.json();S.items=new Map((j.items||[]).map(({id,...v})=>[id,v]));S.ro=true;S.site=true;document.documentElement.classList.add('ro','ghsite');S.ready=true;S.note='';render();const tk=getTok();if(tk&&!(await ownerLogin(tk,true)))toast('登入過期，請重新登入');return}}catch(e){}
   loadLocal();S.ready=true;S.note='目前沒連上共用資料，只存在這台裝置的瀏覽器';render();return}
  S.col=db.collection('items');
  const timer=setTimeout(()=>{S.ready=true;S.note='資料還連不上，稍後再看看';render()},10000);
